@@ -24,10 +24,8 @@ This repository provides a script for generating moment maps (Moment 0, 1, and 2
 To run the script, execute the following command in the CASA environment:
 
 ```bash
-casa --nologger --nogui -c your_script.py
+casa --nologger --nogui -c CASA_script.py
 ```
-
-Replace `your_script.py` with the filename of your script.
 
 ### Workflow Steps
 
