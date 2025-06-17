@@ -1,3 +1,13 @@
+# Title: Make a moments maps
+# Author: Mojtaba Raouf
+# Contact: mojtaba.raouf@gmail.com
+# Description: This Python script processes raw radio astronomy data (assumed to be a Measurement Set)
+# using CASA (Common Astronomy Software Applications). Its applicable for radiative transfer from simulations and observation data.
+# Requirements: CASA installed (available from NRAO), Python environment with CASA modules.
+# Outputs: Observation summary, diagnostic plots, calibration tables, cleaned image (FITS),
+# and image statistics.
+# Usage: Run in a CASA environment (e.g., casapy). Update paths and parameters as needed.
+# For any details or issues, contact Mojtaba Raouf at mojtaba.raouf@gmail.com.
 import numpy as np
 import os
 import astropy.units as u
