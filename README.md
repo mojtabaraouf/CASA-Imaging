@@ -86,51 +86,45 @@ os.system('rm -rf *.image *.integrated *.weighted_coord *.weighted_dispersion_co
 ```
 
 
-**Radio Astronomy Data Processing Script**
+# Radio Astronomy Data Processing Script
 
-The script automates the processing of radio astronomy data to produce scientifically usable outputs, such as cleaned images or statistical summaries. It demonstrates a complete workflow, including:
+This script automates the processing of radio astronomy data to produce scientifically usable outputs, such as cleaned images or statistical summaries. It demonstrates a complete workflow, including:
 
-Importing and inspecting raw data
-Flagging corrupted or noisy data
-Calibrating instrumental and environmental effects
-Creating sky images using the CLEAN algorithm
-Extracting basic image statistics
-Organizing outputs for further analysis
+- Importing and inspecting raw data
+- Flagging corrupted or noisy data
+- Calibrating instrumental and environmental effects
+- Creating sky images using the CLEAN algorithm
+- Extracting basic image statistics
+- Organizing outputs for further analysis
 
-Requirements
+## Usage
 
-CASA: Version 6.x or later, available from the National Radio Astronomy Observatory (NRAO).
-Python: Compatible with CASA’s Python environment (typically Python 2.7 or 3.x, depending on CASA version).
-Operating System: Linux, macOS, or Windows (with CASA installed).
-Dependencies: CASA modules (casatasks, casatools), Python standard libraries (os, glob).
-Disk Space: Sufficient space for input Measurement Set (MS) and output files (e.g., calibration tables, FITS images).
+### Prepare Input Data
 
-Installation
+- The script assumes a dummy Measurement Set (`data/dummy_data.ms`).
+- For real data, replace it with an actual Measurement Set and uncomment the `importasdm` task to convert raw telescope data (e.g., ALMA ASDM format) to MS format.
 
-Install CASA following the instructions on the NRAO website.
-Ensure the CASA Python environment is accessible (e.g., run casapy or activate CASA’s Python).
-Place the script (casa_data_processing.py) in your working directory.
-Create a data/ directory for the input Measurement Set and an outputs/ directory for results (the script creates outputs/ if it doesn’t exist).
+### Run the Script
 
-Usage
+To execute the script, use the following command in the CASA environment:
 
-Prepare Input Data:
-
-For demonstration, the script assumes a dummy Measurement Set (data/dummy_data.ms).
-For real data, replace with an actual Measurement Set and uncomment the importasdm task to convert raw telescope data (e.g., ALMA ASDM format) to MS format.
-
-
-Run the Script:
+```bash
 casapy -c casa_data_processing.py
+```
 
-Alternatively, run in a Python environment with CASA modules:
+Alternatively, you can run it in a Python environment with CASA modules:
+
+```bash
 python casa_data_processing.py
+```
 
+### Check Outputs
 
-Check Outputs:Outputs are saved in the outputs/ directory. See the "Outputs" section below for details.
+Outputs are saved in the `outputs/` directory. See the "Outputs" section below for details.
 
+## File Structure
 
-File Structure
+```
 project_directory/
 ├── data/
 │   └── dummy_data.ms          # Input Measurement Set (dummy or real data)
@@ -143,108 +137,76 @@ project_directory/
 │   ├── target_image.fits      # Exported FITS image
 │   └── image_stats.txt        # Image statistics
 └── casa_data_processing.py    # Main script
+```
 
-Customization
+## Customization
+
 To adapt the script for real data, modify the following parameters based on your dataset:
 
-File Paths:
+### File Paths
 
-Update data_dir and ms_file to point to your Measurement Set.
-Example: ms_file = './data/my_observation.ms'
+- Update `data_dir` and `ms_file` to point to your Measurement Set.
+  - Example: `ms_file = './data/my_observation.ms'`
 
+### Observation Parameters
 
-Observation Parameters:
+- Use `listobs` output to identify field names (e.g., `CAL_BP`, `CAL_PHASE`, `TARGET`) and spectral windows (`spw`).
+- Update `field` and `spw` in tasks like `bandpass`, `gaincal`, `applycal`, and `tclean`.
 
-Use listobs output to identify field names (e.g., CAL_BP, CAL_PHASE, TARGET) and spectral windows (spw).
-Update field and spw in tasks like bandpass, gaincal, applycal, and tclean.
+### Imaging Parameters
 
+- Adjust `imsize` (image size in pixels), `cell` (pixel size in arcseconds), and `threshold` (cleaning threshold) in `tclean` based on your data’s resolution and sensitivity.
+  - Example: For high-resolution ALMA data, set `cell='0.1arcsec'` and `imsize=[512, 512]`.
 
-Imaging Parameters:
+### Calibration
 
-Adjust imsize (image size in pixels), cell (pixel size in arcseconds), and threshold (cleaning threshold) in tclean based on your data’s resolution and sensitivity.
-Example: For high-resolution ALMA data, set cell='0.1arcsec' and imsize=[512, 512].
+- Replace `CAL_BP`, `CAL_PHASE`, and `TARGET` with actual source names from `listobs`.
+- Adjust `refant` (reference antenna) and `solint` (solution interval) based on data quality.
 
+### Spectral Analysis (Optional)
 
-Calibration:
+- Uncomment the spectral cube section in the script to create and analyze a spectral cube (e.g., for HI or CO lines).
+- Update `region` in `imval` for specific spectral extractions.
 
-Replace CAL_BP, CAL_PHASE, and TARGET with actual source names from listobs.
-Adjust refant (reference antenna) and solint (solution interval) based on data quality.
+## Outputs
 
+The script generates the following files in the `outputs/` directory:
 
-Spectral Analysis (Optional):
+- `obs_summary.txt`: Text file summarizing observation details (antennas, sources, spectral windows).
+- `amp_vs_time.png`: Plot of amplitude vs. time for data quality inspection.
+- `bandpass.cal`: Calibration table for frequency-dependent corrections.
+- `gain.cal`: Calibration table for time-dependent amplitude and phase corrections.
+- `target_image.*`: CASA image files (e.g., .image, .residual) from `tclean`.
+- `target_image.fits`: Exported FITS image for external analysis.
+- `image_stats.txt`: Statistics of the cleaned image (peak flux, RMS noise).
 
-Uncomment the spectral cube section in the script to create and analyze a spectral cube (e.g., for HI or CO lines).
-Update region in imval for specific spectral extractions.
+## Example Workflow
 
+1. **Import and Inspect**: Imports a Measurement Set and generates a summary (`obs_summary.txt`). Creates a diagnostic plot (`amp_vs_time.png`) to check for RFI or anomalies.
+2. **Flagging**: Flags shadowed data, high-amplitude outliers, and specific bad antennas (e.g., ANT1).
+3. **Calibration**: Applies bandpass calibration using a bright calibrator (`CAL_BP`). Performs gain calibration for amplitude and phase (`CAL_PHASE`). Applies calibrations to the science target (`TARGET`).
+4. **Imaging**: Creates a cleaned image using the CLEAN algorithm (`target_image`). Exports the image as a FITS file (`target_image.fits`).
+5. **Analysis**: Computes image statistics (peak flux, RMS noise) and saves them (`image_stats.txt`).
+6. **Cleanup**: Lists all generated files for reference and optionally cleans up temporary calibration tables (commented out).
 
+## Troubleshooting
 
-Outputs
-The script generates the following files in the outputs/ directory:
+- **Missing MS File**: If `dummy_data.ms` is not found, replace it with a real Measurement Set or use `importasdm` for raw data.
+- **Calibration Failures**: Check `listobs` output for correct calibrator names and ensure sufficient signal-to-noise ratio (minsnr).
+- **Imaging Artifacts**: Adjust `tclean` parameters (e.g., niter, threshold, robust) or re-flag data if sidelobes persist.
+- **CASA Errors**: Ensure CASA is installed correctly and run in a compatible environment. Check CASA logs for detailed error messages.
 
-obs_summary.txt: Text file summarizing observation details (antennas, sources, spectral windows).
-amp_vs_time.png: Plot of amplitude vs. time for data quality inspection.
-bandpass.cal: Calibration table for frequency-dependent corrections.
-gain.cal: Calibration table for time-dependent amplitude and phase corrections.
-target_image.*: CASA image files (e.g., .image, .residual) from tclean.
-target_image.fits: Exported FITS image for external analysis.
-image_stats.txt: Statistics of the cleaned image (peak flux, RMS noise).
+## Notes
 
-Example Workflow
-
-Import and Inspect:
-
-Imports a Measurement Set and generates a summary (obs_summary.txt).
-Creates a diagnostic plot (amp_vs_time.png) to check for RFI or anomalies.
-
-
-Flagging:
-
-Flags shadowed data, high-amplitude outliers, and a specific bad antenna (e.g., ANT1).
-
-
-Calibration:
-
-Applies bandpass calibration using a bright calibrator (CAL_BP).
-Performs gain calibration for amplitude and phase (CAL_PHASE).
-Applies calibrations to the science target (TARGET).
-
-
-Imaging:
-
-Creates a cleaned image using the CLEAN algorithm (target_image).
-Exports the image as a FITS file (target_image.fits).
-
-
-Analysis:
-
-Computes image statistics (peak flux, RMS noise) and saves them (image_stats.txt).
-
-
-Cleanup:
-
-Lists all generated files for reference.
-Optional cleanup of temporary calibration tables (commented out).
-
-
-
-Troubleshooting
-
-Missing MS File: If dummy_data.ms is not found, replace with a real Measurement Set or use importasdm for raw data.
-Calibration Failures: Check listobs output for correct calibrator names and ensure sufficient signal-to-noise ratio (minsnr).
-Imaging Artifacts: Adjust tclean parameters (e.g., niter, threshold, robust) or re-flag data if sidelobes persist.
-CASA Errors: Ensure CASA is installed correctly and run in a compatible environment. Check CASA logs for detailed error messages.
-
-Notes
-
-The script is designed for demonstration with a dummy dataset. For real data, consult telescope documentation (e.g., ALMA Observing Tool) for observation details.
-For spectral line analysis (e.g., CO or HI), uncomment the spectral cube section and adjust parameters.
-The script assumes basic familiarity with CASA tasks and radio astronomy concepts.
-For large datasets, consider running CASA on a high-performance computing cluster with mpicasa for parallel processing.
+- The script is designed for demonstration with a dummy dataset. For real data, consult telescope documentation (e.g., ALMA Observing Tool) for observation details.
+- For spectral line analysis (e.g., CO or HI), uncomment the spectral cube section and adjust parameters.
+- The script assumes basic familiarity with CASA tasks and radio astronomy concepts.
+- For large datasets, consider running CASA on a high-performance computing cluster with `mpicasa` for parallel processing.
 
 ## Contact
-For questions, issues, or contributions, contact Mojtaba Raouf at mojtaba.raouf@gmail.com.
 
-Acknowledgments
+For questions, issues, or contributions, contact Mojtaba Raouf at [mojtaba.raouf@gmail.com](mailto:mojtaba.raouf@gmail.com).
 
-CASA is developed by the National Radio Astronomy Observatory (NRAO).
-This script is inspired by standard radio astronomy data reduction workflows.
+## Acknowledgments
+
+CASA is developed by the National Radio Astronomy Observatory (NRAO). This script is inspired by standard radio astronomy data reduction workflows.
